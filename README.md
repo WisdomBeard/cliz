@@ -8,9 +8,9 @@ A minimalisstic ZMQ CLI tool that offers filters to send/recv data (hex, b64, js
 
 ## Dependencies
 
-They are handled by Conan. Therefore, the only *actual* dependencies are **Python** and **g++**. Here is [how to install it](https://docs.conan.io/1/installation.html#install-with-pip-recommended). To summarize: create a Python virtual environment, activat it, pip install conan.
+They are handled by Conan. Therefore, the only *actual* dependencies are **Python** and **g++**. Here is [how to install it](https://docs.conan.io/1/installation.html#install-with-pip-recommended). To summarize: create a Python virtual environment, activate it, pip install conan.
 
-Do not forget to create you Conan build profile. It has to be done once.
+Do not forget to create your Conan build profile. It has to be done once.
 
 ```bash
 conan profile detect
@@ -30,7 +30,7 @@ The `cliz` executable has some mandatory options.
 
 One of the following options must be passed:
 
-* `--listen_to` if a **server** socket shall be created
+* `--listen_on` if a **server** socket shall be created
 * `--connect_to` if a **client** socket shall be created
 
 The value associated to that option is the address to listen on, or connect to. Example: `"tcp://localhost:12345"`.
