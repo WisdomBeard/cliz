@@ -1,4 +1,5 @@
 #include <iostream>
+#include <sstream>
 #include <string>
 #include <optional>
 #include <nlohmann/json.hpp>
@@ -191,15 +192,16 @@ class Config
 
             if (pairIt == END)
             {
-                cerr << "Invalid socket type. Shall be one of ";
+                stringstream msg;
+                msg << "Invalid socket type. Shall be one of ";
                 auto sep = "";
                 for (const auto& [typeTuple, _] : Z_SOCKET_TYPE_NAMES)
                 {
-                    cerr << sep << typeTuple;
+                    msg << sep << typeTuple;
                     sep = "|";
                 }
-                cerr << "." << endl;
-                return; // failure
+                msg << "." << endl;
+                throw runtime_error(msg.str());
             }
 
             SocketType(get<1>(*pairIt));
@@ -238,15 +240,16 @@ class Config
 
             if (pairIt == END)
             {
-                cerr << "Invalid recv filter type. Shall be one of ";
+                stringstream msg;
+                msg << "Invalid recv filter type. Shall be one of ";
                 auto sep = "";
                 for (const auto& [typeTuple, _] : FILTER_TYPES)
                 {
-                    cerr << sep << typeTuple;
+                    msg << sep << typeTuple;
                     sep = "|";
                 }
-                cerr << "." << endl;
-                return; // failure
+                msg << "." << endl;
+                throw runtime_error(msg.str());
             }
 
             RecvFilter(get<1>(*pairIt));
@@ -386,71 +389,79 @@ void ListenToSocket(zmq::socket_t* sock, Config* config, optional<unsigned int> 
 
 int main(int argc, char** argv)
 {
-    Config config{argc, argv};
+    try
+    {
+        Config config{argc, argv};
 
-    if (!config.IsValid())
-    {
-        return 1; // messages were already printed, no need to print more
-    }
+        if (!config.IsValid())
+        {
+            return 1; // messages were already printed, no need to print more
+        }
 
-    zmq::context_t ctx;
-    zmq::socket_t sock(ctx, config.SocketType());
-    if (config.IsServer())
-    {
-        if (config.Verbose())
+        zmq::context_t ctx;
+        zmq::socket_t sock(ctx, config.SocketType());
+        if (config.IsServer())
         {
-            cout << "Listening on " << config.ZmqAddress() << " as " << config.SocketTypeName() << "..." << endl;
+            if (config.Verbose())
+            {
+                cout << "Listening on " << config.ZmqAddress() << " as " << config.SocketTypeName() << "..." << endl;
+            }
+            sock.bind(config.ZmqAddress());
         }
-        sock.bind(config.ZmqAddress());
-    }
-    else
-    {
-        if (config.Verbose())
+        else
         {
-            cout << "Connecting to " << config.ZmqAddress() << " as " << config.SocketTypeName() << "..." << endl;
+            if (config.Verbose())
+            {
+                cout << "Connecting to " << config.ZmqAddress() << " as " << config.SocketTypeName() << "..." << endl;
+            }
+            sock.connect(config.ZmqAddress());
         }
-        sock.connect(config.ZmqAddress());
-    }
 
-    switch (config.SocketType())
-    {
-    case zmq::socket_type::pub:
-    {
-        ListenToStdin(&sock, &config);
-        break;
-    }
-    case zmq::socket_type::sub:
-    {
-        sock.set(zmq::sockopt::subscribe, "");
-        ListenToSocket(&sock, &config);
-        break;
-    }
-    case zmq::socket_type::req:
-    {
-        while (true)
+        switch (config.SocketType())
         {
-            ListenToStdin(&sock, &config, 1);
-            ListenToSocket(&sock, &config, 1);
-        }
-        break;
-    }
-    case zmq::socket_type::rep:
-    {
-        while (true)
+        case zmq::socket_type::pub:
         {
-            ListenToSocket(&sock, &config, 1);
-            ListenToStdin(&sock, &config, 1);
+            ListenToStdin(&sock, &config);
+            break;
         }
-        break;
-    }
-    default:
-        throw runtime_error("Invalid socket type");
-    }
+        case zmq::socket_type::sub:
+        {
+            sock.set(zmq::sockopt::subscribe, "");
+            ListenToSocket(&sock, &config);
+            break;
+        }
+        case zmq::socket_type::req:
+        {
+            while (true)
+            {
+                ListenToStdin(&sock, &config, 1);
+                ListenToSocket(&sock, &config, 1);
+            }
+            break;
+        }
+        case zmq::socket_type::rep:
+        {
+            while (true)
+            {
+                ListenToSocket(&sock, &config, 1);
+                ListenToStdin(&sock, &config, 1);
+            }
+            break;
+        }
+        default:
+            throw runtime_error("Invalid socket type");
+        }
 
-    // Cease any blocking operations in progress.
-    ctx.shutdown();
-    // Do a shutdown, if needed and destroy the context.
-    ctx.close();
+        // Cease any blocking operations in progress.
+        ctx.shutdown();
+        // Do a shutdown, if needed and destroy the context.
+        ctx.close();
+    }
+    catch (exception& e)
+    {
+        cerr << e.what() << endl;
+        return 1;
+    }
 
     return 0;
 }
