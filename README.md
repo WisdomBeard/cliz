@@ -101,11 +101,11 @@ v[-v]
 Here are some examples:
 
 
-| Bob                                                                                      |      wire (hex)      | Alice                                                                                         |
-| ------------------------------------------------------------------------------------------ | :---------------------: | ----------------------------------------------------------------------------------------------- |
-| `./cliz --listen_on "tcp://*:12345" --as pub --on_send hex2bin`                          |                       | `./cliz --connect_to "tcp://localhost:12345" --as sub`                                        |
-| 4f6b                                                                                     |      -- 4f6b -->      | Ok                                                                                            |
-| `./cliz --listen_on "tcp://*:12345" --as req --on_send json2cbor --on_recv json2json -v` |                       | `./cliz --connect_to "tcp://localhost:12345" --as rep --on_recv bin2b64 --on_send hex2bin -v` |
-| Listening on tcp://*:12345 as req...                                                     |                       | Connecting to tcp://localhost:12345 as rep...                                                 |
-| >>> {"key":42}                                                                           | -- a1636b6579182a --> | ... oWNrZXkYKg==                                                                              |
-| ... "Hello"                                                                              | <-- 2248656c6c6f22 -- | >>> 2248656c6c6f22                                                                            |
+| Bob                                                                                      |   wire (hex)   | Alice                                                                                         |
+| ------------------------------------------------------------------------------------------ | :--------------: | ----------------------------------------------------------------------------------------------- |
+| `./cliz --listen_on "tcp://*:12345" --as pub --on_send hex2bin`                          |               | `./cliz --connect_to "tcp://localhost:12345" --as sub`                                        |
+| 4f6b                                                                                     |      4f6b      | Ok                                                                                            |
+| `./cliz --listen_on "tcp://*:12345" --as req --on_send json2cbor --on_recv json2json -v` |               | `./cliz --connect_to "tcp://localhost:12345" --as rep --on_recv bin2b64 --on_send hex2bin -v` |
+| Listening on tcp://*:12345 as req...                                                     |               | Connecting to tcp://localhost:12345 as rep...                                                 |
+| >>> {"key":42}                                                                           | a1636b6579182a | ... oWNrZXkYKg==                                                                              |
+| ... "Hello"                                                                              | 2248656c6c6f22 | >>> 2248656c6c6f22                                                                            |
